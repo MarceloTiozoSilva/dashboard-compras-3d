@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Compras 3D — 2020–2025</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #07080f;
+    --surface:  #0d1117;
+    --card:     #111827;
+    --border:   #1f2937;
+    --accent1:  #3b82f6;
+    --accent2:  #8b5cf6;
+    --accent3:  #10b981;
+    --accent4:  #f59e0b;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --glow1:    rgba(59,130,246,0.15);
+    --glow2:    rgba(139,92,246,0.15);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Header ──────────────────────────────────────────────── */
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #111827 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 50% -20%, rgba(59,130,246,0.12), transparent);
+    pointer-events: none;
+  }
+  .header-inner { position: relative; max-width: 1600px; margin: auto; }
+  header h1 {
+    font-size: 1.85rem; font-weight: 700; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #34d399);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
+    color: #93c5fd; border-radius: 20px; padding: 3px 12px; font-size: 0.75rem;
+    margin-top: 10px;
+  }
+  .badge::before { content: '●'; color: #22c55e; font-size: 8px; }
+
+  /* ── Layout ──────────────────────────────────────────────── */
+  main { max-width: 1600px; margin: auto; padding: 32px 40px; }
+
+  /* ── KPI Cards ───────────────────────────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px; margin-bottom: 32px;
+  }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .kpi:hover { transform: translateY(-2px); }
+  .kpi::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--kpi-color, var(--accent1));
+  }
+  .kpi-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .kpi-value {
+    font-size: 1.6rem; font-weight: 700; margin-top: 6px;
+    color: var(--kpi-color, var(--accent1));
+  }
+  .kpi-sub { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+  /* ── Chart Grid ──────────────────────────────────────────── */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 1100px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+  .chart-card:hover {
+    border-color: rgba(99,102,241,0.4);
+    box-shadow: 0 0 40px rgba(99,102,241,0.08);
+  }
+  .chart-card.wide { grid-column: 1 / -1; }
+  .card-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 24px 0;
+  }
+  .card-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    background: var(--icon-bg, rgba(59,130,246,0.15));
+  }
+  .card-title { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+  .card-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+  .chart-wrap { width: 100%; }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    max-width: 1600px; margin: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>Dashboard de Compras 3D</h1>
+    <p>Análise completa de notas de compra — Janeiro 2020 a Dezembro 2025</p>
+    <span class="badge">Dados atualizados</span>
+  </div>
+</header>
+
+<main>
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <!-- Charts -->
+  <div class="chart-grid">
+    <div class="chart-card wide">
+      <div class="card-header">
+        <div class="card-icon" style="--icon-bg:rgba(59,130,246,0.15)">📊</div>
+        <div>
+          <div class="card-title">Volume de Compras por Mês / Ano</div>
+          <div class="card-sub">Gráfico de superfície 3D — arraste para girar</div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chartMes"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-header">
+        <div class="card-icon" style="--icon-bg:rgba(139,92,246,0.15)">🏆</div>
+        <div>
+          <div class="card-title">Top 10 Fornecedores por Valor</div>
+          <div class="card-sub">Barras 3D — arraste para girar</div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chartForn"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-header">
+        <div class="card-icon" style="--icon-bg:rgba(16,185,129,0.15)">🧾</div>
+        <div>
+          <div class="card-title">Distribuição de Impostos</div>
+          <div class="card-sub">ICMS · IPI · PIS · COFINS</div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chartImp"></div>
+    </div>
+
+    <div class="chart-card wide">
+      <div class="card-header">
+        <div class="card-icon" style="--icon-bg:rgba(245,158,11,0.15)">📈</div>
+        <div>
+          <div class="card-title">Evolução Anual de Compras e Impostos</div>
+          <div class="card-sub">Linhas 3D — arraste para girar</div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chartAnual"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Fonte: Notas de Compra 2020–2025 &nbsp;|&nbsp; Gerado automaticamente &nbsp;|&nbsp; Visualização interativa com Plotly.js
+</footer>
+
+<script>
+// ── Dados embutidos ────────────────────────────────────────────────────────────
+const RAW = {"totalNotas": 4244, "mes": {"periodo": ["2020-12", "2021-01", "2021-02", "2021-03", "2021-04", "2021-05", "2021-06", "2021-07", "2021-08", "2021-09", "2021-10", "2021-11", "2021-12", "2022-01", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-11", "2022-12", "2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2023-12", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10"], "ano": [2020, 2021, 2021, 2021, 2021, 2021, 2021, 2021, 2021, 2021, 2021, 2021, 2021, 2022, 2022, 2022, 2022, 2022, 2022, 2022, 2022, 2022, 2022, 2022, 2022, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2024, 2024, 2024, 2024, 2024, 2024, 2024, 2024, 2024, 2024, 2024, 2024, 2025, 2025, 2025, 2025, 2025, 2025, 2025, 2025, 2025, 2025], "mes": [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "valor": [78750.01, 79717.75, 96565.99, 186528.74, 140605.88, 99453.27, 285330.94, 124527.46, 126047.44, 387949.45, 192818.29, 269227.0, 250727.72, 271924.59, 364299.42, 187135.47, 199959.18, 159975.91, 206488.41, 309700.25, 262370.95, 184685.02, 184162.86, 200764.81, 147921.81, 167068.06, 154123.9, 206677.83, 96975.67, 132203.89, 172332.73, 123120.83, 149688.0, 181855.22, 105519.85, 85818.99, 90656.25, 98600.92, 84846.77, 96507.14, 158113.64, 97415.23, 100134.55, 139819.94, 120352.64, 94185.51, 56291.96, 59698.31, 62735.99, 91181.49, 133958.29, 109887.24, 203150.72, 813741.43, 121773.31, 185992.3, 125086.28, 107547.59, 57861.04]}, "forn": {"nome": ["VOTORANTIM CIMENTOS SA", "PEDREIRA DO TREVO LTDA", "AWA DISTRIBUIDORA DE MERCADORIAS E SERVICOS LTDA", "ARCELORMITTAL BRASIL S.A.", "ICAVEL VEICULOS LTDA", "COMERCIO DE COMBUSTIVEIS ESTRELA DOURADA", "PEDREIRA RIO QUATI LTDA", "GERDAU ACOS LONGOS S/A", "CIA DE CIMENTO ITAMBE", "A S FAGUNDES & CIA LTDA - ME"], "valor": [2123502.4, 714226.04, 552964.65, 538721.56, 526178.9, 381285.25, 376074.34, 301115.68, 282800.64, 200229.0]}, "imp": {"ICMS": 324994.86, "IPI": 21638.6, "PIS": 29713.63, "COFINS": 136916.56}, "anual": {"ano": [2020, 2021, 2022, 2023, 2024, 2025], "total": [78750.01, 2239499.93, 2679388.68, 1666041.22, 1168702.6, 1950179.69], "icms": [4581.19, 325.44, 24309.39, 76322.35, 76233.51, 143222.98], "ipi": [0.0, 15271.13, 4575.45, 555.43, 642.65, 593.94], "pis": [650.7, 29.28, 3261.01, 8237.86, 8520.46, 9014.32], "cofins": [2997.98, 135.1, 15022.05, 37958.07, 39266.53, 41536.83]}};
+
+// ── Utilidades ─────────────────────────────────────────────────────────────────
+const fmt  = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtK = v => v >= 1e6 ? 'R$ '+(v/1e6).toFixed(2)+' M' : v >= 1e3 ? 'R$ '+(v/1e3).toFixed(1)+' K' : fmt(v);
+
+const DARK_LAYOUT = {
+  paper_bgcolor: 'transparent',
+  plot_bgcolor:  'transparent',
+  font: { family: "'Segoe UI', system-ui, sans-serif", color: '#94a3b8', size: 11 },
+  margin: { l:10, r:10, t:10, b:10 },
+};
+
+const SCENE_STYLE = {
+  bgcolor: 'transparent',
+  xaxis: { gridcolor:'#1e293b', tickcolor:'#334155', linecolor:'#334155', showbackground:false, zerolinecolor:'#334155' },
+  yaxis: { gridcolor:'#1e293b', tickcolor:'#334155', linecolor:'#334155', showbackground:false, zerolinecolor:'#334155' },
+  zaxis: { gridcolor:'#1e293b', tickcolor:'#334155', linecolor:'#334155', showbackground:false, zerolinecolor:'#334155' },
+};
+
+// ── KPIs ───────────────────────────────────────────────────────────────────────
+const totalCompras   = RAW.anual.total.reduce((a,b)=>a+b, 0);
+const totalImposto   = Object.values(RAW.imp).reduce((a,b)=>a+b, 0);
+const melhorAno      = RAW.anual.ano[RAW.anual.total.indexOf(Math.max(...RAW.anual.total))];
+const mediaMensal    = totalCompras / RAW.mes.valor.length;
+
+const kpis = [
+  { label:'Total Compras 2020–2025', value: fmtK(totalCompras),                    sub:'Valor total das notas',             color:'#3b82f6' },
+  { label:'Total de Notas Fiscais',  value: RAW.totalNotas.toLocaleString('pt-BR'), sub:'Documentos processados',            color:'#8b5cf6' },
+  { label:'Impostos Totais',         value: fmtK(totalImposto),                    sub:'ICMS + IPI + PIS + COFINS',         color:'#10b981' },
+  { label:'Melhor Ano',              value: melhorAno,                              sub: fmtK(Math.max(...RAW.anual.total)), color:'#f59e0b' },
+  { label:'Média Mensal de Compras', value: fmtK(mediaMensal),                     sub:`Sobre ${RAW.mes.valor.length} meses com movimento`, color:'#ec4899' },
+];
+
+const kpiGrid = document.getElementById('kpiGrid');
+kpis.forEach(k => {
+  kpiGrid.insertAdjacentHTML('beforeend', `
+    <div class="kpi" style="--kpi-color:${k.color}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`);
+});
+
+// ── CHART 1: Superfície 3D Mês/Ano ───────────────────────────────────────────
+(function() {
+  const anos  = [2020,2021,2022,2023,2024,2025];
+  const meses = [1,2,3,4,5,6,7,8,9,10,11,12];
+  const mNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  // Monta matriz [ano][mes]
+  const matrix = anos.map(() => new Array(12).fill(0));
+  RAW.mes.periodo.forEach((_, i) => {
+    const ai = anos.indexOf(RAW.mes.ano[i]);
+    const mi = RAW.mes.mes[i] - 1;
+    if (ai >= 0) matrix[ai][mi] = RAW.mes.valor[i];
+  });
+
+  const trace = {
+    type: 'surface',
+    x: mNames,
+    y: anos,
+    z: matrix,
+    colorscale: [
+      [0.0,  '#0f172a'],
+      [0.15, '#1e3a5f'],
+      [0.35, '#1d4ed8'],
+      [0.55, '#7c3aed'],
+      [0.75, '#db2777'],
+      [1.0,  '#fbbf24'],
+    ],
+    contours: {
+      z: { show:true, usecolormap:true, highlightcolor:'#fff', project:{z:true} }
+    },
+    hovertemplate: '<b>%{y} — %{x}</b><br>R$ %{z:,.2f}<extra></extra>',
+    lighting: { ambient:0.7, diffuse:0.9, specular:0.3, roughness:0.5 },
+    showscale: true,
+    colorbar: {
+      thickness:12, len:0.7, x:1.02,
+      tickfont:{ color:'#94a3b8', size:10 },
+      tickformat:',.0f',
+      title:{ text:'R$', font:{ color:'#94a3b8', size:10 } }
+    }
+  };
+
+  const layout = {
+    ...DARK_LAYOUT,
+    height: 460,
+    margin: { l:0, r:60, t:30, b:0 },
+    scene: {
+      ...SCENE_STYLE,
+      xaxis: { ...SCENE_STYLE.xaxis, title:{ text:'Mês', font:{color:'#64748b'} } },
+      yaxis: { ...SCENE_STYLE.yaxis, title:{ text:'Ano', font:{color:'#64748b'} } },
+      zaxis: { ...SCENE_STYLE.zaxis, title:{ text:'R$',  font:{color:'#64748b'} }, tickformat:',.0f' },
+      camera: { eye:{ x:1.6, y:-1.6, z:1.1 } },
+      aspectratio: { x:1.8, y:1, z:0.7 },
+    },
+  };
+
+  Plotly.newPlot('chartMes', [trace], layout, {responsive:true, displayModeBar:false});
+})();
+
+// ── CHART 2: Barras 3D Fornecedores ──────────────────────────────────────────
+(function() {
+  const nomes  = RAW.forn.nome.map((n,i) => `#${i+1} ${n.length>28 ? n.slice(0,28)+'…' : n}`);
+  const valores = RAW.forn.valor;
+  const n = nomes.length;
+
+  // Cria uma mesh3d por barra para ter cores independentes
+  const palette = ['#3b82f6','#6366f1','#8b5cf6','#a855f7','#c084fc',
+                   '#10b981','#34d399','#f59e0b','#fb923c','#f43f5e'];
+
+  function makeBar(idx, value, color) {
+    const x0 = idx - 0.38, x1 = idx + 0.38;
+    const z0 = -0.38,       z1 =  0.38;
+    const h  = value;
+    return {
+      type: 'mesh3d',
+      x: [x0,x1,x1,x0, x0,x1,x1,x0],
+      y: [0,0,0,0,      h,h,h,h],
+      z: [z0,z0,z1,z1,  z0,z0,z1,z1],
+      i: [0,0,4,4,0,0,3,3,0,0,1,1],
+      j: [1,2,5,6,1,5,2,6,3,7,2,6],
+      k: [2,3,6,7,5,4,6,7,7,4,6,5],
+      color,
+      opacity: 0.92,
+      flatshading: false,
+      lighting: { ambient:0.6, diffuse:1, specular:0.6, roughness:0.3, fresnel:0.5 },
+      lightposition: { x:2000, y:1000, z:5000 },
+      hovertext: `${RAW.forn.nome[idx]}<br>${fmt(value)}`,
+      hoverinfo: 'text',
+      showscale: false,
+      name: nomes[idx],
+    };
+  }
+
+  const traces = valores.map((v,i) => makeBar(i, v, palette[i]));
+
+  // Rótulos dos eixos X via scatter3d invisible
+  const labels = {
+    type: 'scatter3d', mode: 'text',
+    x: Array.from({length:n},(_,i)=>i),
+    y: new Array(n).fill(-valores[0]*0.08),
+    z: new Array(n).fill(0),
+    text: Array.from({length:n},(_,i)=>`#${i+1}`),
+    textfont: { color:'#94a3b8', size:10 },
+    hoverinfo: 'none', showlegend: false,
+  };
+
+  const layout = {
+    ...DARK_LAYOUT,
+    height: 460,
+    margin: { l:0, r:0, t:30, b:0 },
+    scene: {
+      ...SCENE_STYLE,
+      xaxis: { ...SCENE_STYLE.xaxis, tickvals:Array.from({length:n},(_,i)=>i), ticktext:Array.from({length:n},(_,i)=>`#${i+1}`), title:'' },
+      yaxis: { ...SCENE_STYLE.yaxis, title:{ text:'R$', font:{color:'#64748b'} }, tickformat:',.0f' },
+      zaxis: { ...SCENE_STYLE.zaxis, showticklabels:false, title:'' },
+      camera: { eye:{ x:1.8, y:-1.4, z:1.0 } },
+      aspectratio: { x:2.2, y:1, z:0.3 },
+    },
+    showlegend: true,
+    legend: {
+      x:1.01, y:0.98, bgcolor:'rgba(0,0,0,0)',
+      font:{ color:'#94a3b8', size:9 },
+      traceorder:'normal',
+    },
+  };
+
+  Plotly.newPlot('chartForn', [...traces, labels], layout, {responsive:true, displayModeBar:false});
+})();
+
+// ── CHART 3: Pizza 3D Impostos ────────────────────────────────────────────────
+(function() {
+  const labels = ['ICMS','IPI','PIS','COFINS'];
+  const values = [RAW.imp.ICMS, RAW.imp.IPI, RAW.imp.PIS, RAW.imp.COFINS];
+  const colors = ['#3b82f6','#8b5cf6','#10b981','#f59e0b'];
+
+  // Pie com aspecto 3D via pull e hole
+  const pie = {
+    type: 'pie',
+    labels,
+    values,
+    marker: {
+      colors,
+      line: { color:'#111827', width:2 }
+    },
+    pull: [0.06, 0.04, 0.04, 0.04],
+    hole: 0.38,
+    rotation: 45,
+    textinfo: 'label+percent',
+    textfont: { color:'#e2e8f0', size:12, family:'Segoe UI' },
+    hovertemplate: '<b>%{label}</b><br>%{value:,.2f}<br>%{percent}<extra></extra>',
+    direction: 'clockwise',
+  };
+
+  // Rosca interna com valor total
+  const total = values.reduce((a,b)=>a+b,0);
+
+  const layout = {
+    ...DARK_LAYOUT,
+    height: 460,
+    margin: { l:20, r:20, t:60, b:20 },
+    annotations: [{
+      text: `<b>Total</b><br>${fmtK(total)}`,
+      x:0.5, y:0.5, xanchor:'center', yanchor:'middle',
+      showarrow:false, font:{ size:13, color:'#e2e8f0' }
+    }],
+    legend: {
+      orientation:'h', x:0.5, xanchor:'center', y:-0.05,
+      font:{ color:'#94a3b8', size:11 },
+      bgcolor:'rgba(0,0,0,0)',
+    },
+  };
+
+  Plotly.newPlot('chartImp', [pie], layout, {responsive:true, displayModeBar:false});
+
+  // Aplica perspectiva 3D via CSS para dar efeito de profundidade
+  const el = document.getElementById('chartImp').querySelector('.main-svg');
+  if (el) el.style.transform = 'perspective(800px) rotateX(18deg)';
+  document.getElementById('chartImp').addEventListener('plotly_afterplot', () => {
+    const svg = document.getElementById('chartImp').querySelector('.main-svg');
+    if (svg) svg.style.transform = 'perspective(800px) rotateX(18deg)';
+  });
+})();
+
+// ── CHART 4: Linhas 3D Evolução Anual ────────────────────────────────────────
+(function() {
+  const anos  = RAW.anual.ano;
+  const total = RAW.anual.total;
+  const icms  = RAW.anual.icms;
+  const ipi   = RAW.anual.ipi;
+  const pis   = RAW.anual.pis;
+  const cofins= RAW.anual.cofins;
+  const n     = anos.length;
+
+  function makeLine(name, yVals, color, zOff=0) {
+    return {
+      type: 'scatter3d', mode: 'lines+markers+text',
+      name,
+      x: anos,
+      y: yVals,
+      z: new Array(n).fill(zOff),
+      text: yVals.map(v => fmtK(v)),
+      textposition: 'top center',
+      textfont: { size:9, color },
+      line: { color, width:5 },
+      marker: { size:7, color, symbol:'circle',
+                line:{ color:'#111827', width:2 } },
+      hovertemplate: `<b>${name} %{x}</b><br>R$ %{y:,.2f}<extra></extra>`,
+    };
+  }
+
+  // Barras 3D verticais para o total (mesh3d)
+  const barTraces = anos.map((ano, i) => {
+    const v = total[i];
+    const x0 = ano-0.25, x1 = ano+0.25;
+    const z0 = -0.4,      z1 =  0.4;
+    return {
+      type:'mesh3d',
+      x:[x0,x1,x1,x0, x0,x1,x1,x0],
+      y:[0,0,0,0,      v,v,v,v],
+      z:[z0,z0,z1,z1,  z0,z0,z1,z1],
+      i:[0,0,4,4,0,0,3,3,0,0,1,1],
+      j:[1,2,5,6,1,5,2,6,3,7,2,6],
+      k:[2,3,6,7,5,4,6,7,7,4,6,5],
+      color: `rgba(59,130,246,${0.3 + i*0.08})`,
+      opacity:0.55,
+      flatshading:true,
+      lighting:{ambient:0.8,diffuse:0.9},
+      showscale:false, hoverinfo:'skip', showlegend:false,
+    };
+  });
+
+  const lineTotal = makeLine('Total Compras', total, '#60a5fa', 0);
+  const lineICMS  = makeLine('ICMS',   icms,   '#a78bfa', 0);
+  const linePIS   = makeLine('PIS',    pis,    '#34d399', 0);
+  const lineCOF   = makeLine('COFINS', cofins, '#fbbf24', 0);
+  const lineIPI   = makeLine('IPI',    ipi,    '#f87171', 0);
+
+  const layout = {
+    ...DARK_LAYOUT,
+    height: 460,
+    margin: { l:0, r:0, t:30, b:0 },
+    scene: {
+      ...SCENE_STYLE,
+      xaxis: { ...SCENE_STYLE.xaxis, title:{ text:'Ano', font:{color:'#64748b'} }, tickformat:'d', dtick:1 },
+      yaxis: { ...SCENE_STYLE.yaxis, title:{ text:'R$', font:{color:'#64748b'} }, tickformat:',.0f' },
+      zaxis: { ...SCENE_STYLE.zaxis, showticklabels:false, title:'' },
+      camera: { eye:{ x:1.5, y:-1.5, z:1.0 } },
+      aspectratio: { x:2, y:1, z:0.3 },
+    },
+    legend: {
+      x:1.01, y:0.95, bgcolor:'rgba(0,0,0,0)',
+      font:{ color:'#94a3b8', size:10 },
+    },
+  };
+
+  Plotly.newPlot('chartAnual', [...barTraces, lineTotal, lineICMS, linePIS, lineCOF, lineIPI],
+                 layout, {responsive:true, displayModeBar:false});
+})();
+</script>
+</body>
+</html>
