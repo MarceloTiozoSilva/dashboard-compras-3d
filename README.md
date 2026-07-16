@@ -14,7 +14,7 @@ Desenvolvido com Claude Code a partir de dados reais de notas fiscais, este dash
 
 ## Como usar
 
-Abra o arquivo `Dashboard_Compras_3D.html` diretamente no navegador. Não requer instalação ou servidor.
+Acesse o dashboard diretamente: [marcelotiozosilva.github.io/dashboard-compras-3d](https://marcelotiozosilva.github.io/dashboard-compras-3d/)
 
 ## Autor
 
